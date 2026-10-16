@@ -4,7 +4,7 @@ Agent IA qui **analyse un CV, le compare à une offre d'emploi, rédige une lett
 
 Propulsé par l'**API Groq** (palier gratuit, modèle `openai/gpt-oss-120b`). Gemini, OpenRouter et Claude sont aussi supportés.
 
-![Aperçu de l'interface](docs/apercu-interface.png)
+
 
 ## Fonctionnalités
 
