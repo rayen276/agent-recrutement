@@ -1,73 +1,76 @@
-# Agent RH — CV, offre d'emploi et lettre de motivation
+﻿# ✉️ Agent RH — CV, offre d'emploi et lettre de motivation
 
-Agent IA (Python, Gemini gratuit ou Claude) qui :
+Agent IA qui **analyse un CV, le compare à une offre d'emploi, rédige une lettre de motivation sur mesure**, cherche des offres, **prépare l'entretien** et rédige l'e-mail de candidature.
 
-1. **lit** un CV et une offre (PDF, DOCX, TXT, MD) ;
-2. **compare** les deux : score sur 100, points forts, écarts, exigences couvertes/partielles/absentes, mots-clés, conseils pour le CV ;
-3. **rédige** une lettre de motivation adaptée (ton, langue, longueur réglables), révisable à la demande ;
-4. **exporte** le tout en Markdown, Word et JSON ;
-5. **cherche des offres** adaptées au CV et les classe par pertinence ;
-6. **prépare l'entretien** : questions probables, pistes de réponse, questions à poser, et entraînement avec évaluation de vos réponses ;
-7. **rédige un e-mail de candidature** et l'envoie, uniquement après votre relecture et votre confirmation.
+Propulsé par l'**API Groq** (palier gratuit, modèle `openai/gpt-oss-120b`). Gemini, OpenRouter et Claude sont aussi supportés.
 
-La lettre ne s'appuie que sur les faits du CV : le prompt interdit d'inventer des expériences ou des chiffres. Relisez-la avant envoi.
+![Aperçu de l'interface](docs/apercu-interface.png)
 
-## Installation (100 % gratuit avec Gemini)
+## Fonctionnalités
 
-L'agent fonctionne avec un fournisseur **gratuit, sans carte bancaire** : l'API Gemini de Google (palier gratuit d'AI Studio). Groq (gratuit) et OpenRouter sont aussi supportés ; Claude (payant) reste disponible.
+| | |
+|---|---|
+| 📄 **Analyse CV ↔ offre** | Score de correspondance sur 100, points forts, écarts, exigences couvertes / partielles / absentes, mots-clés, conseils pour améliorer le CV |
+| ✍️ **Lettre de motivation** | Sur mesure, avec ton, langue et longueur réglables ; révisable (« plus court », « ajoute mon bénévolat »…) ; mots-clés de l'offre mis en évidence |
+| 🔎 **Recherche d'offres** | Cherche des offres adaptées au CV (Remotive, Arbeitnow) et les classe par pertinence ; liens LinkedIn / Indeed |
+| 🎤 **Préparation d'entretien** | Questions probables, pistes de réponse tirées du CV, questions à poser, **entraînement noté** avec version améliorée |
+| 📧 **E-mail de candidature** | Brouillon avec pièces jointes ; **jamais envoyé sans votre confirmation** |
+| 📦 **Export** | Markdown, Word (.docx), JSON, `.eml`, dossier ZIP complet |
+
+**Principe de confiance** : la lettre ne s'appuie que sur les faits du CV (aucune expérience ni chiffre inventé), et rien n'est envoyé sans validation humaine. Relisez toujours avant d'envoyer.
+
+## Démarrage rapide
+
+### Option A — Python
 
 ```bash
+git clone https://github.com/rayen276/agent-recrutement.git
+cd agent-recrutement
+
 python -m venv .venv
-source .venv/bin/activate          # Windows : .venv\Scripts\Activate.ps1
-pip install -e .                   # léger ; interface web : pip install -e ".[web]"
-cp .env.example .env               # Windows : copy .env.example .env
+source .venv/bin/activate            # Windows PowerShell : .venv\Scripts\Activate.ps1
+pip install -e ".[web]"              # sans l'interface web (plus léger) : pip install -e .
+
+cp .env.example .env                 # Windows : copy .env.example .env
+# éditez .env et collez votre clé Groq (voir « Configuration »)
+
+streamlit run app.py                 # interface web : http://localhost:8501
 ```
 
-1. Créez une clé sur https://aistudio.google.com/apikey (connexion avec un compte Google).
-2. Ouvrez `.env` et remplacez `colle-ta-cle-ici` par la clé, puis enregistrez.
+### Option B — Docker
 
-| Fournisseur | `RH_PROVIDER` | Clé | Coût |
+```bash
+cp .env.example .env                 # puis éditez .env
+docker compose up --build            # interface web : http://localhost:8501
+```
+
+## Configuration
+
+Copiez `.env.example` en `.env`, puis collez votre clé **Groq** (gratuite) :
+
+1. Créez un compte et une clé sur [console.groq.com/keys](https://console.groq.com/keys).
+2. Dans `.env` : `GROQ_API_KEY=votre-clé` (`RH_PROVIDER=groq` est la valeur par défaut).
+
+Le fournisseur se change avec `RH_PROVIDER` :
+
+| Fournisseur | `RH_PROVIDER` | Variable de clé | Coût |
 |---|---|---|---|
-| Google Gemini | `gemini` (défaut) | `GEMINI_API_KEY` | palier gratuit avec limites de débit |
-| Groq | `groq` | `GROQ_API_KEY` | palier gratuit |
+| **Groq** | `groq` (défaut) | `GROQ_API_KEY` | palier gratuit, limites de débit |
+| Google Gemini | `gemini` | `GEMINI_API_KEY` | palier gratuit — [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
 | OpenRouter | `openrouter` | `OPENROUTER_API_KEY` | modèles `:free` disponibles |
-| Anthropic (Claude) | `anthropic` | `ANTHROPIC_API_KEY` | payant (`pip install -e ".[anthropic]"`) |
+| Anthropic (Claude) | `anthropic` | `ANTHROPIC_API_KEY` | payant — `pip install -e ".[anthropic]"` |
 
-Le modèle se change avec `RH_MODEL` (les noms évoluent : en cas d'erreur 404, lisez le message, Google y indique le modèle à utiliser).
+Autres variables : `RH_MODEL` (les noms de modèles évoluent), `RH_REASONING_EFFORT` (modèles gpt-oss), et `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_FROM` pour l'envoi d'e-mails (facultatif ; Gmail exige un « mot de passe d'application »).
 
-**Confidentialité** : sur le palier gratuit de Gemini, Google peut utiliser les contenus envoyés pour améliorer ses produits. Évitez d'y envoyer des documents confidentiels ; anonymisez au besoin (nom, téléphone, adresse).
-
-## Docker
-
-Aucune installation de Python n'est nécessaire : seul [Docker](https://www.docker.com/products/docker-desktop/) l'est.
-
-```bash
-cp .env.example .env               # Windows : copy .env.example .env
-# éditez .env : GEMINI_API_KEY=votre-clé  (gratuite : https://aistudio.google.com/apikey)
-
-docker compose up --build          # interface web sur http://localhost:8501
-docker compose down                # arrêt
-```
-
-Ligne de commande dans le conteneur (déposez vos fichiers dans `donnees/`, les résultats arrivent dans `sorties/`) :
-
-```bash
-docker compose run --rm cli --cv /donnees/cv.txt --offre /donnees/offre.txt
-docker compose run --rm cli --cv /donnees/mon_cv.pdf --offre /donnees/offre.docx --langue anglais
-```
-
-Sans Compose :
-
-```bash
-docker build -t agent-recrutement .
-docker run --rm -p 8501:8501 --env-file .env agent-recrutement
-```
-
-**Connexion lente ou erreur « Read timed out » pendant `docker compose up --build`** : relancez simplement la commande. Les dépendances sont installées avant le code, avec des délais longs et un cache : les paquets déjà téléchargés ne sont pas retéléchargés, et modifier le code ne réinstalle rien. Pour suivre l'avancement : `docker compose build --progress=plain`. Si votre réseau bloque PyPI, indiquez un miroir : `docker compose build --build-arg PIP_INDEX_URL=https://votre-miroir/simple`. Alternative sans Docker : environnement virtuel Python (voir Installation), sans l'option `[web]` pour la ligne de commande seule.
-
-Notes : le fichier `.env` n'est pas copié dans l'image (il est lu au lancement) ; le conteneur tourne en utilisateur non-root ; l'image fait quelques centaines de Mo à cause de Streamlit (prévoyez de l'espace disque).
+> 🔒 **Ne publiez jamais votre `.env`** (il est ignoré par `.gitignore`).
+>
+> **Confidentialité** : sur les paliers gratuits, le fournisseur peut utiliser les textes envoyés pour améliorer ses produits. Anonymisez votre CV (nom, téléphone, adresse) si cela vous gêne.
 
 ## Utilisation
+
+### Interface web
+
+Renseignez le CV et l'offre, puis naviguez entre **Analyse CV & offre**, **Offres**, **Entretien** et **E-mail**. Le bouton « Exporter dossier » télécharge le rapport, la lettre et la fiche d'entretien dans une archive ZIP.
 
 ### Ligne de commande
 
@@ -75,99 +78,95 @@ Notes : le fichier `.env` n'est pas copié dans l'image (il est lu au lancement)
 # 1. Candidature : analyse + lettre
 recruter candidater --cv examples/cv.txt --offre examples/offre.txt
 recruter candidater --cv mon_cv.pdf --offre offre.docx --langue anglais --ton "formel et sobre" --mots 250
-#    (l'ancienne forme « recruter --cv … --offre … » fonctionne toujours)
 
-# 2. Offres : recherche + classement selon le CV (mots-clés déduits du CV si --requete est omis)
+# 2. Offres : recherche + classement (mots-clés déduits du CV si --requete est omis)
 recruter offres --cv mon_cv.pdf
-recruter offres --cv mon_cv.pdf --requete "data analyst" --requete "BI" --choisir 1   # lance la candidature pour l'offre n°1
+recruter offres --cv mon_cv.pdf --requete "data analyst" --choisir 1     # candidature pour l'offre n°1
 
-# 3. Entretien : fiche de questions (+ entraînement interactif avec --simuler)
-recruter entretien --cv mon_cv.pdf --offre offre.txt
+# 3. Entretien : fiche de questions (+ entraînement interactif)
 recruter entretien --cv mon_cv.pdf --offre offre.txt --simuler
 
-# 4. E-mail : brouillon seul (rien n'est envoyé) puis envoi après confirmation
-recruter email --cv mon_cv.pdf --a recrutement@entreprise.com --entreprise Atlas --poste "Growth" --lettre sorties/lettre.docx
-recruter email --cv mon_cv.pdf --a recrutement@entreprise.com --entreprise Atlas --lettre sorties/lettre.docx --envoyer
+# 4. E-mail : brouillon seul, puis envoi après confirmation
+recruter email --cv mon_cv.pdf --a recrutement@entreprise.com --entreprise Atlas --lettre sorties/lettre.docx
+recruter email --cv mon_cv.pdf --a recrutement@entreprise.com --lettre sorties/lettre.docx --envoyer
 ```
 
-Les fichiers sont écrits dans `sorties/` (`analyse.json`, `rapport.md|docx`, `lettre.md|docx`, `entretien.md|docx`, `email.eml`).
+Les résultats sont écrits dans `sorties/`. Avec Docker : déposez vos fichiers dans `donnees/` puis
+`docker compose run --rm cli --cv /donnees/cv.txt --offre /donnees/offre.txt`.
 
-### Interface web
-
-```bash
-streamlit run app.py      # ou : docker compose up --build
-```
-
-Le CV et l'offre se renseignent dans la barre latérale. Quatre onglets : **Candidature**, **Offres** (le bouton « Utiliser cette offre » remplit la barre latérale), **Entretien** (questions + entraînement noté) et **E-mail** (brouillon, téléchargement `.eml`, envoi après confirmation).
-
-Le thème (page claire pleine largeur, cartes blanches, accent violet) vient de `.streamlit/config.toml` et de `src/recruitment_agent/ui.py`. Après une modification de `ui.py`, redémarrez Streamlit (le module reste en mémoire). Le bouton « Exporter dossier » de l'en-tête télécharge une archive ZIP (rapport, lettre, fiche d'entretien).
-
-### Recherche d'offres : sources et limites
-
-Les sources automatiques sont des API publiques gratuites sans clé : **Remotive** (télétravail) et **Arbeitnow** (Europe). Elles couvrent peu la Tunisie : l'agent affiche donc aussi des liens de recherche **LinkedIn** et **Indeed** ; copiez l'offre trouvée dans la barre latérale. Respectez les conditions d'utilisation de ces sites (pas de collecte massive).
-
-### E-mails : sécurité
-
-- Aucun envoi sans votre confirmation explicite (case à cocher dans l'interface, question `oui/non` en ligne de commande).
-- Un seul destinataire par envoi, adresse validée, limite de 10 envois par session web, protection contre l'injection d'en-têtes.
-- L'agent n'invente aucune adresse : c'est vous qui fournissez le destinataire. N'utilisez pas l'outil pour de l'envoi en masse non sollicité.
-- Configuration SMTP dans `.env` (voir `.env.example`). Gmail exige un « mot de passe d'application ». Sans SMTP, téléchargez le brouillon `.eml` et envoyez-le depuis votre messagerie.
-
-### En tant que bibliothèque
+### Comme bibliothèque Python
 
 ```python
 from recruitment_agent import RecruitmentAgent, LetterOptions
 from recruitment_agent.config import Settings
-from recruitment_agent.llm import AnthropicLLM
+from recruitment_agent.llm import build_llm
 from recruitment_agent.loaders import load_file
 
 settings = Settings.from_env()
-agent = RecruitmentAgent(AnthropicLLM(settings))
+agent = RecruitmentAgent(build_llm(settings), settings.max_input_chars)
 result = agent.run(load_file("cv.pdf"), load_file("offre.txt"), LetterOptions(langue="français"))
-print(result.analysis.score, result.letter)
+print(result.analysis.score)
+print(result.letter)
 ```
 
 ## Architecture
 
 ```
 src/recruitment_agent/
-├── config.py     paramètres (.env, modèle, limites)
-├── models.py     modèles Pydantic (Analysis, LetterOptions, Result)
-├── loaders.py    lecture PDF / DOCX / TXT / MD
-├── prompts.py    prompts système et utilisateur
-├── llm.py        interface LLM + client Claude (SDK) + fabrique `build_llm`
-├── llm_compat.py client Gemini / Groq / OpenRouter (API compatible OpenAI, sans dépendance)
-├── agent.py      orchestration analyse → lettre (+ révisions)
-├── jobs.py       recherche d'offres (Remotive, Arbeitnow, liens manuels)
-├── mailer.py     brouillon, validation, envoi SMTP (avec confirmation)
-├── ui.py         composants visuels de l'interface web (CSS + HTML échappé)
-├── exporters.py  Markdown, Word, JSON (rapport, lettre, fiche d'entretien)
-└── cli.py        commande `recruter` (candidater, offres, entretien, email)
-app.py            interface Streamlit
-Dockerfile, docker-compose.yml, .dockerignore   conteneurisation
-donnees/          fichiers d'entrée pour le mode Docker CLI
-tests/            tests unitaires (faux client LLM, aucun appel réseau)
+├── config.py       paramètres (.env, fournisseurs, budgets de jetons)
+├── models.py       modèles Pydantic (Analysis, InterviewPrep, EmailDraft…)
+├── loaders.py      lecture PDF / DOCX / TXT / MD
+├── prompts.py      prompts (documents traités comme des données, anti-injection)
+├── llm.py          interface LLM, client Claude, fabrique build_llm
+├── llm_compat.py   client Groq / Gemini / OpenRouter (API compatible OpenAI, sans dépendance)
+├── agent.py        orchestration : analyse, lettre, offres, entretien, e-mail
+├── jobs.py         recherche d'offres (Remotive, Arbeitnow, liens manuels)
+├── mailer.py       brouillon, validation, envoi SMTP avec confirmation
+├── exporters.py    Markdown, Word, JSON, ZIP
+├── ui.py           composants visuels de l'interface web
+└── cli.py          commande `recruter`
+app.py              interface Streamlit
+tests/              tests unitaires (faux client LLM, aucun appel réseau)
 ```
 
-- **Sortie fiable** : le schéma JSON est généré depuis `Analysis` (appel d'outil forcé avec Claude, mode JSON sinon), puis validé par Pydantic avec une nouvelle tentative en cas de JSON invalide.
-- **Testable** : `RecruitmentAgent` dépend d'une interface `LLMClient` ; les tests utilisent un faux client.
-- **Sécurité** : CV et offre sont encadrés par des balises et traités comme des données (défense contre l'injection de prompt) ; texte tronqué à 30 000 caractères par document.
+Choix techniques :
+- **Sortie structurée** : le schéma JSON est généré depuis des modèles Pydantic, puis la réponse est validée ; nouvelle tentative automatique si le JSON est invalide ou tronqué.
+- **Résilience** : attente automatique quand le quota gratuit par minute est atteint, budgets de jetons par type de réponse, reprise de la lettre seule si elle échoue après l'analyse.
+- **Testable** : l'agent dépend d'une interface `LLMClient` ; les tests utilisent un faux client.
+- **Sécurité des e-mails** : validation de l'adresse, un destinataire par envoi, confirmation obligatoire, limite de 10 envois par session, protection contre l'injection d'en-têtes.
 
 ## Tests
 
 ```bash
+pip install -e ".[dev]"
 pytest
 ```
 
-## Pistes d'évolution
+## Dépannage
 
-- OCR pour les CV scannés ; adaptation du CV lui-même à l'offre ;
-- sources d'offres locales (Tunisie) si une API publique devient disponible ;
-- suivi des candidatures (envoyées, relances) ; historique en base.
+| Message | Cause et solution |
+|---|---|
+| `Clé API refusée (401/403)` | Clé invalide ou refusée : vérifiez `GROQ_API_KEY` dans `.env` (pas de guillemets, fichier enregistré), ou créez une nouvelle clé |
+| `Modèle introuvable ou retiré (404)` | Le nom du modèle a changé : listez les modèles de votre compte (`https://api.groq.com/openai/v1/models`) et mettez à jour `RH_MODEL` |
+| `Quota gratuit atteint (429)` | Limite par minute ou par jour : l'agent attend seul les délais courts ; sinon patientez, ou changez de modèle / fournisseur |
+| `json_validate_failed` | Réponse du modèle tronquée : l'agent réessaie automatiquement avec plus de place |
+| `Read timed out` pendant `docker compose build` | Connexion lente : relancez la commande (les paquets déjà téléchargés sont en cache) |
+| `Envoi d'e-mail non configuré` | Renseignez les variables `SMTP_*` dans `.env`, ou téléchargez le brouillon `.eml` |
 
 ## Limites
 
-- Les modèles gratuits peuvent tronquer ou mal formater une longue réponse : l'agent redemande automatiquement avec plus de place (jusqu'à 3 essais) et attend si le quota par minute est atteint.
-- Les PDF scannés (images) ne sont pas lus sans OCR.
-- Les offres automatiques viennent de sources internationales ; les résultats varient et les API peuvent changer.
+- Les PDF scannés (images) ne sont pas lus : pas d'OCR.
+- Les offres automatiques viennent de sources internationales (télétravail, Europe) et peuvent varier ; pour d'autres marchés, collez l'offre trouvée sur LinkedIn / Indeed.
 - Le score est une estimation, pas une décision de recrutement : ne l'utilisez pas pour filtrer des candidats sans supervision humaine.
+- Respectez les conditions d'utilisation des sites d'offres et n'utilisez pas l'envoi d'e-mails pour du démarchage de masse non sollicité.
+
+## Pistes d'évolution
+
+- OCR pour les CV scannés ; adaptation du CV lui-même à chaque offre ;
+- sources d'offres locales ; suivi des candidatures et relances ;
+- historique en base de données.
+
+## Licence
+
+MIT — voir [LICENSE](LICENSE).
+
