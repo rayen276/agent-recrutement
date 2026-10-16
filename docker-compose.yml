@@ -1,0 +1,20 @@
+services:
+  # Interface web : http://localhost:8501
+  web:
+    build: .
+    image: agent-recrutement
+    ports:
+      - "8501:8501"
+    env_file: .env
+    restart: unless-stopped
+
+  # Ligne de commande (profil « cli », lancé à la demande)
+  cli:
+    build: .
+    image: agent-recrutement
+    profiles: ["cli"]
+    env_file: .env
+    entrypoint: ["recruter"]
+    volumes:
+      - ./donnees:/donnees:ro        # déposez-y vos CV et offres
+      - ./sorties:/app/sorties       # les résultats arrivent ici
